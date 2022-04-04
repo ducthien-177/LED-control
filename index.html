@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+  <head>
+  <body>
+    <h1>システムプログラミング</h1>
+       
+    <div>
+      <ul id="info"></ul>
+      <button id="led_on">入室しました</button>
+      <button id="led_off">退室しました</button>
+      <a href="temp.html">温度情報</a>
+    </div>
+
+    <script type="module">
+    // TODO0 ここに設定情報を貼り付ける
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore.js";
+    import { doc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore.js";
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCrk7bSbaSRzx5J2-Y64z7lZR7oUJL6Cjc",
+      authDomain: "systemprograming-02.firebaseapp.com",
+      projectId: "systemprograming-02",
+      storageBucket: "systemprograming-02.appspot.com",
+      messagingSenderId: "411485224014",
+      appId: "1:411485224014:web:91b5822d5c01e8c3a2971f"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+
+    // Initialize Firestore
+    const db = getFirestore();
+
+
+    const button_led_on = document.getElementById('led_on'); // 「入室しました」ボタン
+    const button_led_off = document.getElementById('led_off'); // 「退出しました」ボタン
+
+    //  「入室しました」ボタンが押された時の処理
+    button_led_on.onclick = function(){
+      sendDataToFirestore("ON")
+      document.getElementById('info').innerHTML = 'LEDをONにしました';
+    }
+
+    //  「退室しました」ボタンが押された時の処理
+    button_led_off.onclick = function(){
+      sendDataToFirestore("OFF")
+      document.getElementById('info').innerHTML = 'LEDをOFFにしました';
+    }
+
+    async function sendDataToFirestore(value){
+    // TODO1 Firestoreのデータを更新する関数を完成させる
+      try{
+        await setDoc(doc(db, "led_status", "led"), {
+          led: value
+      });
+      } catch(e) {
+        console.error("Error adding document: ", e);
+      }
+    }
+      
+    </script>
+  </body>
+</html>

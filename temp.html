@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>温度チャート</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.js"></script>
+</head>
+
+<body>
+  <canvas id="tempchart"></canvas>
+  <canvas id="humichart"></canvas>
+  <canvas id="preschart"></canvas>
+
+  <script type="module">
+    // TODO:0 ここに設定情報を貼り付ける
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+    import {getFirestore} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import {collection,onSnapshot} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      authDomain: "systemprograming-02.firebaseapp.com",
+      projectId: "systemprograming-02",
+      storageBucket: "systemprograming-02.appspot.com",
+      messagingSenderId: "411485224014",
+      appId: "1:411485224014:web:91b5822d5c01e8c3a2971f"
+    };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+
+  // Initialize Firestore
+  const db = getFirestore();
+
+
+    var ctx_temp = document.getElementById("tempchart");
+    var ctx_humi = document.getElementById("humichart");
+    var ctx_pres = document.getElementById("preschart");
+    var tempData=[];
+    var humiData=[];
+    var presData=[];
+
+
+    // Chart.jsの温度グラフの設定
+    var chart_temp = new Chart(ctx_temp, {
+      type: 'line',
+      data: {
+        datasets:[{
+          label:'温度',
+          data:tempData,
+	  lineTension:0, //0にすると直線，それ以外だと曲線になる
+          fill:true //グラフの線の下側を色で塗るかどうか
+	}]
+      },
+      options: {
+        scales: {
+          xAxes: [{
+            type: 'time', // 横軸が時間なので、時間用の設定を使う
+          }]
+        }
+      }
+    });
+
+    // Chart.jsの湿度グラフの設定
+    var chart_humi = new Chart(ctx_humi, {
+      type: 'line',
+      data: {
+        datasets:[{
+	  label:'湿度',
+	  data:humiData,
+	  lineTension:0,
+	  fill:true
+	}]
+      },
+      options: {
+        scales: {
+          xAxes: [{
+            type: 'time', // 横軸が時間なので、時間用の設定を使う
+          }]
+        }
+      }
+    });
+
+    // Chart.jsの気圧グラフの設定
+    var chart_pres = new Chart(ctx_pres, {
+      type: 'line',
+      data: {
+        datasets:[{
+	  label:'気圧',
+	  data:presData,
+	  lineTension:0,
+	  fill:true
+	}]
+      },
+      options: {
+        scales: {
+          xAxes: [{
+            type: 'time', // 横軸が時間なので、時間用の設定を使う
+          }]
+        }
+      }
+    });
+
+    // コレクションtemperatureに対してリッスンし，変更があるたびに呼ばれる
+    // 毎回コレクション内の全てのドキュメントを取得しているので非効率的な実装．本当は差分だけでよい．
+    var data_num = 0; //既にグラフに描画済みのデータ数
+    const unsub = onSnapshot(collection(db, "temperature"), (collection) => {
+      var array=[];
+      // コレクション内の全てのドキュメントをarrayに格納
+      collection.forEach(function(doc) {
+        array.push(doc)
+      });
+      // ドキュメントのid(日時)でソート
+      array.sort((a,b)=>{
+        return Date.parse(a)-Date.parse(b) //Date.parse()は日時を基準時からのミリ秒に変換
+      });
+
+      array = array.slice(data_num); //既にグラフに描画済みのデータは切り落とす
+      data_num = collection.size; //描画済みのデータ個数を更新
+      // 各ドキュメントの温度,湿度,気圧をチャートのデータに展開
+      array.forEach(function(doc) {
+        const data_temp = {x:doc.id,y:doc.data().temp};
+        const data_humi = {x:doc.id,y:doc.data().humi};
+        const data_pres = {x:doc.id,y:doc.data().pres};
+        chart_temp.data.datasets[0].data.push(data_temp);
+        chart_humi.data.datasets[0].data.push(data_humi);
+        chart_pres.data.datasets[0].data.push(data_pres);
+      });
+      chart_temp.update(); // 再描画
+      chart_humi.update(); // 再描画
+      chart_pres.update(); // 再描画
+    }, err => {
+    	console.log(err)
+    });
+
+  </script>
+</body>
+
+</html>
